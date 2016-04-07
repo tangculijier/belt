@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    
+    <declare-styleable name = "belt">
+        
+   
+    <attr name ="belt_padding"   />
+        
+     
+     </declare-styleable>
+     
+      <attr name = "belt_padding"  format ="dimension" />
+</resources>
