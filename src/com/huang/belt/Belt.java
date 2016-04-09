@@ -1,10 +1,13 @@
 package com.huang.belt;
 
+
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -12,6 +15,10 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -34,6 +41,9 @@ public class Belt extends ViewGroup
 	private int ButtonHeight ;
 	private Context ctx;
 	int lastX ;//记录上次点击位置x坐标
+	
+	int firstindex = 0;
+	private boolean isMoving = false;
 	
 	public Belt(Context context)
 	{
@@ -64,7 +74,6 @@ public class Belt extends ViewGroup
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
 	{
 		int childCount = getChildCount();
-		Log.d("huang","onMeasure child1="+ childCount);
 		for (int i = 0; i < childCount; i++)
 		{
 			// 测量child
@@ -157,11 +166,16 @@ public class Belt extends ViewGroup
             if(offX > 100)
             {
             	//向右滑动手势 todo
-            	 Log.d(TAG, "onFling right");
+            	if(isMoving == false)
+            	{
+            		firstindex++;
+                	moveRight();
+            	}
+            	
             }
             else if(offX < -100)
             {
-            	 Log.d(TAG, "onFling left");
+               	firstindex--;
             }
 
            
@@ -192,5 +206,83 @@ public class Belt extends ViewGroup
 		canvas.drawLine(PADDING_LEFT+ (ButtonWidth * 3 / 2), TOP_PADDING+(ButtonHeight*5/2), PADDING_LEFT+ (ButtonWidth *1 / 2), TOP_PADDING+(ButtonHeight*3/2), linePaint);//绘制线
 
 	}
+	
+	protected void moveRight()
+	{
+		isMoving = true;
+		int n =getChildCount();
+		int duration = 1*1000;
+		for(int i = 0 ;i < n;i++)
+		{
+			final Button child = (Button) getChildAt(i);
+			//当前的位置:  1234
+			//		  0  	5
+			//		    9876	
+			int nowindex = (i + firstindex) % 10 ;
+			if(nowindex>0 && nowindex <=3)//第一列右移
+			{
+				slideview(child,0,ButtonWidth,0,0,duration);
+			}
+			else if(nowindex == 4)//
+			{
+				slideview(child,0,ButtonWidth,0,ButtonHeight,duration);
+			}
+			else if(nowindex == 5)
+			{
+				slideview(child,0,-ButtonWidth,0,ButtonHeight,duration);
+			}
+			else if(nowindex>=6 && nowindex <=8)//第二列左移
+			{
+				slideview(child,0,-ButtonWidth,0,0,duration);
+			}
+			else if(nowindex == 9)
+			{
+				slideview(child,0,-ButtonWidth,0,-ButtonHeight,duration);
+			}
+			else if(nowindex == 0)
+			{
+				slideview(child,0,ButtonWidth,0,-ButtonHeight,duration);
+			}
+			
+		}
+		
+		
+	}
+		
+	public void slideview(final View view,final float fromX, final float toX,final float fromY, final float toY,int duration) 
+	{
+	    TranslateAnimation animation = new TranslateAnimation(fromX, toX, fromY, toY);
+	    animation.setDuration(duration);
+	    animation.setAnimationListener(new Animation.AnimationListener() 
+	    {
+	        @Override
+	        public void onAnimationStart(Animation animation)
+	        {
+	        }
+	        
+	        @Override
+	        public void onAnimationRepeat(Animation animation) 
+	        {
+	        }
+	        
+	        @Override
+	        public void onAnimationEnd(Animation animation)
+	        {
+	            int left = view.getLeft()+(int)(toX-fromX);
+	            int top = view.getTop()+(int)(toY-fromY);
+	            int width = view.getWidth();
+	            int height = view.getHeight();
+	            view.clearAnimation();
+	            view.layout(left, top, left+width, top+height);
+	            isMoving = false;
+	        }
+	    });
+	    view.startAnimation(animation);
+	    
+	}
+	
 }
+	
+	
+
 
