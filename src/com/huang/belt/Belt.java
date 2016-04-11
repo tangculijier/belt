@@ -40,9 +40,12 @@ public class Belt extends ViewGroup
 	private int ButtonWidth ;
 	private int ButtonHeight ;
 	private Context ctx;
-	int lastX ;//记录上次点击位置x坐标
+	int lastX ;//记录上次手势点击位置x坐标
 	
-	int firstindex = 0;
+	int firstindex = 0;//1号按钮所在的当前位置 如下图， 1按钮就到了1的位置
+	//当前的位置:  1234                     0123
+	//		  0  	5  右移firstindex++后，  9	4
+	//		    9876					8765
 	private boolean isMoving = false;
 	
 	public Belt(Context context)
@@ -154,18 +157,15 @@ public class Belt extends ViewGroup
 		switch(event.getAction())
         {
         case MotionEvent.ACTION_DOWN:
-            
             lastX = x;
-            
             break;
             
         case MotionEvent.ACTION_UP:
-        	
             //计算移动的距离
             int offX = x - lastX;
             if(offX > 100)
             {
-            	//向右滑动手势 todo
+            	//向右滑动手势 
             	if(isMoving == false)
             	{
             		firstindex++;
@@ -173,9 +173,9 @@ public class Belt extends ViewGroup
             	}
             	
             }
-            else if(offX < -100)
+            else if(offX < -100)//左
             {
-               	firstindex--;
+                //还没左 反向移动即可
             }
 
            
@@ -186,7 +186,7 @@ public class Belt extends ViewGroup
     }
 	
 	@Override
-	protected void onDraw(Canvas canvas)
+	protected void onDraw(Canvas canvas)//画线
 	{
 		super.onDraw(canvas);
 		Paint linePaint = new Paint();
@@ -207,7 +207,7 @@ public class Belt extends ViewGroup
 
 	}
 	
-	protected void moveRight()
+	protected synchronized void moveRight()
 	{
 		isMoving = true;
 		int n =getChildCount();
@@ -219,27 +219,27 @@ public class Belt extends ViewGroup
 			//		  0  	5
 			//		    9876	
 			int nowindex = (i + firstindex) % 10 ;
-			if(nowindex>0 && nowindex <=3)//第一列右移
+			if(nowindex>0 && nowindex <=3)//1-3右移
 			{
 				slideview(child,0,ButtonWidth,0,0,duration);
 			}
-			else if(nowindex == 4)//
+			else if(nowindex == 4)//4下移
 			{
 				slideview(child,0,ButtonWidth,0,ButtonHeight,duration);
 			}
-			else if(nowindex == 5)
+			else if(nowindex == 5)//5下移
 			{
 				slideview(child,0,-ButtonWidth,0,ButtonHeight,duration);
 			}
-			else if(nowindex>=6 && nowindex <=8)//第二列左移
+			else if(nowindex>=6 && nowindex <=8)//6-8左移
 			{
 				slideview(child,0,-ButtonWidth,0,0,duration);
 			}
-			else if(nowindex == 9)
+			else if(nowindex == 9)//9上移
 			{
 				slideview(child,0,-ButtonWidth,0,-ButtonHeight,duration);
 			}
-			else if(nowindex == 0)
+			else if(nowindex == 0)//0上移
 			{
 				slideview(child,0,ButtonWidth,0,-ButtonHeight,duration);
 			}
@@ -249,6 +249,7 @@ public class Belt extends ViewGroup
 		
 	}
 		
+	//动画
 	public void slideview(final View view,final float fromX, final float toX,final float fromY, final float toY,int duration) 
 	{
 	    TranslateAnimation animation = new TranslateAnimation(fromX, toX, fromY, toY);
@@ -274,7 +275,7 @@ public class Belt extends ViewGroup
 	            int height = view.getHeight();
 	            view.clearAnimation();
 	            view.layout(left, top, left+width, top+height);
-	            isMoving = false;
+	            isMoving = false;//动画结束时可以继续右移,否则错位
 	        }
 	    });
 	    view.startAnimation(animation);
